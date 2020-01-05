@@ -25,7 +25,7 @@ class Regressor(torch.nn.Module):
         return self.a * x + self.b
 
 
-def l2_loss(y, y_pred):
+def mse_loss(y, y_pred):
     """Mean Squared Loss."""
     return (y - y_pred).pow(2).mean()
 
@@ -43,8 +43,8 @@ optimizer = torch.optim.Adam(m.parameters(), lr=1e-1)
 
 def train(x, y, loss_fn, n_step=200):
     for step in range(n_step):
-        x_ = torch.Tensor(x)#.unsqueeze(dim=0)
-        y_ = torch.Tensor(y)#.unsqueeze(dim=0)
+        x_ = torch.FloatTensor(x)
+        y_ = torch.FloatTensor(y)
 
         y_pred = m(x_)
         optimizer.zero_grad()
@@ -55,25 +55,28 @@ def train(x, y, loss_fn, n_step=200):
     return m.a.data.item(), m.b.data.item()
 
 plt.cla()
-plt.scatter(normal_x, normal_y)
-plt.scatter(anomaly_x, anomaly_y)
+plt.scatter(normal_x, normal_y, label='normal')
+plt.scatter(anomaly_x, anomaly_y, label='anomaly')
 x_lin = np.arange(0, 3)
 
 
-a, b = train(normal_x, normal_y, l2_loss)
-plt.plot(x_lin, a*x_lin+b, label='l2-normal')
+a, b = train(normal_x, normal_y, mse_loss)
+plt.plot(x_lin, a*x_lin+b, label='Ground Truth')
 print('normal a, b: ', a, b)
 
-a, b = train(x, y, l2_loss)
-plt.plot(x_lin, a*x_lin+b, label='l2-normal & anomaly')
+a, b = train(x, y, mse_loss)
+plt.plot(x_lin, a*x_lin+b, label='MSE')
 print('normal-anomaly a, b: ', a, b)
 
 a, b = train(x, y, huber_loss)
-plt.plot(x_lin, a*x_lin+b, label='huber(sigma=0.1)-normal & anomaly')
+plt.plot(x_lin, a*x_lin+b, label='Huber (sigma=0.1)')
 print('huber normal-anomaly a, b: ', a, b)
-plt.legend()
-plt.show()
 
+plt.title('1D Regression')
+plt.legend()
+# plt.show()
+
+plt.savefig('regression_1d.png')
 
 
 
